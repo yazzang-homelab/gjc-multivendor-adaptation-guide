@@ -34,25 +34,45 @@ PAGE = """<!DOCTYPE html>
   nav .wrap {{ display:flex; gap:18px; padding:14px 20px; flex-wrap:wrap; }}
   nav a {{ color:var(--muted); text-decoration:none; font-size:14.5px; }}
   nav a:hover, nav a.on {{ color:var(--accent); }}
-  h1,h2,h3 {{ color:#fff; line-height:1.35; }}
-  h1 {{ font-size:30px; }}
-  h2 {{ font-size:22px; color:var(--accent); border-bottom:1px solid var(--border); padding-bottom:8px; margin-top:44px; }}
-  h3 {{ font-size:17.5px; color:#cfe6f5; }}
-  a {{ color:var(--accent); }}
+  h1,h2,h3 {{ color:#fff; line-height:1.4; }}
+  h1 {{ font-size:30px; margin:26px 0 14px; }}
+  h2 {{ font-size:22px; color:var(--accent); border-bottom:1px solid var(--border);
+       padding-bottom:8px; margin:48px 0 16px; }}
+  h3 {{ font-size:17.5px; color:#cfe6f5; margin:30px 0 10px; }}
+  p {{ margin:12px 0; }}
+  li {{ margin:6px 0; }}
+  li > p {{ margin:4px 0; }}
+  hr {{ border:none; border-top:1px solid var(--border); margin:36px 0; }}
+  a {{ color:var(--accent); text-decoration:none; }}
+  a:hover {{ text-decoration:underline; }}
   img {{ max-width:100%; border-radius:12px; }}
-  table {{ width:100%; border-collapse:collapse; margin:16px 0; font-size:14.5px;
+  div[align="center"] img {{ margin-bottom:6px; }}
+  div[align="center"] h1 {{ border:none; }}
+  div[align="center"] p {{ margin:10px auto; max-width:760px; }}
+  .badges img, p img[src*="shields.io"] {{ border-radius:3px; vertical-align:middle; margin:2px 2px; }}
+  .table-wrap {{ overflow-x:auto; margin:16px 0; border-radius:8px; }}
+  table {{ width:100%; border-collapse:collapse; font-size:14.5px;
           background:var(--panel); border-radius:8px; overflow:hidden; }}
-  th,td {{ padding:9px 12px; text-align:left; border-bottom:1px solid var(--border); vertical-align:top; }}
-  th {{ background:#1d2733; color:#b8cfe0; }}
+  th,td {{ padding:10px 13px; text-align:left; border-bottom:1px solid var(--border);
+          vertical-align:top; min-width:72px; }}
+  th {{ background:#1d2733; color:#b8cfe0; white-space:nowrap; }}
+  tr:last-child td {{ border-bottom:none; }}
   code {{ background:var(--code); padding:2px 7px; border-radius:4px;
-         font-family:'JetBrains Mono','D2Coding',Consolas,monospace; font-size:13.5px; color:#9ccfff; }}
+         font-family:'JetBrains Mono','D2Coding',Consolas,monospace; font-size:13.5px;
+         color:#9ccfff; overflow-wrap:anywhere; }}
   pre {{ background:var(--code); border:1px solid var(--border); border-radius:8px;
-        padding:14px 16px; overflow-x:auto; }}
-  pre code {{ background:none; padding:0; color:#c5d8e8; }}
-  blockquote {{ border-left:4px solid var(--accent); margin:14px 0; padding:8px 18px;
-               background:var(--panel); border-radius:0 8px 8px 0; color:var(--muted); }}
+        padding:14px 16px; overflow-x:auto; line-height:1.6; margin:16px 0; }}
+  pre code {{ background:none; padding:0; color:#c5d8e8; overflow-wrap:normal; }}
+  blockquote {{ border-left:4px solid var(--accent); margin:18px 0; padding:10px 18px;
+               background:var(--panel); border-radius:0 8px 8px 0; color:#b7c6d4; }}
+  blockquote p {{ margin:6px 0; }}
   footer {{ color:var(--muted); font-size:13px; border-top:1px solid var(--border);
            margin-top:56px; padding-top:16px; }}
+  @media (max-width:680px) {{
+    body {{ font-size:15px; }}
+    nav .wrap {{ gap:12px; }}
+    th,td {{ padding:8px 9px; }}
+  }}
 </style>
 </head>
 <body>
@@ -61,6 +81,7 @@ PAGE = """<!DOCTYPE html>
   <a href="{base}docs/01-gjc-intro.html">1부 GJC 개요·설치</a>
   <a href="{base}docs/02-multivendor-overview.html">2부 원본 가이드 개요</a>
   <a href="{base}docs/03-adaptation.html">3부 적응 가이드 · /mlbo</a>
+  <a href="{base}docs/04-build-your-own.html">4부 내 구성으로 만들기</a>
   <a href="https://github.com/yazzang-homelab/gjc-multivendor-adaptation-guide">GitHub</a>
 </div></nav>
 <div class="wrap">
@@ -79,11 +100,13 @@ def render(src: Path, dst: Path, base: str) -> None:
     text = src.read_text(encoding="utf-8")
     # 문서 간 .md 링크 → .html
     text = re.sub(r"\((?!https?://)([^)\s]+)\.md(#[^)\s]*)?\)", r"(\1.html\2)", text)
-    # GitHub 는 <div align> 블록 사이 마크다운을 렌더하지만 python-markdown 은 못 한다 —
-    # standalone div 열고닫는 줄을 제거해 내용물이 일반 마크다운으로 처리되게 한다.
-    text = re.sub(r"^</?div[^>]*>\s*$", "", text, flags=re.M)
+    # GitHub 는 <div align> 블록 사이 마크다운을 렌더한다. python-markdown 은 markdown="1"
+    # 속성이 있어야 블록 내부를 마크다운으로 처리하므로 여기서 주입한다 (가운데 정렬 유지).
+    text = re.sub(r'^<div align="center">\s*$', '<div align="center" markdown="1">', text, flags=re.M)
     MD.reset()
     body = MD.convert(text)
+    # 좁은 화면에서 표가 레이아웃을 깨지 않게 가로 스크롤 래퍼
+    body = body.replace("<table>", '<div class="table-wrap"><table>').replace("</table>", "</table></div>")
     m = re.search(r"^#\s+(.+)$", text, re.M)
     title = (m.group(1).strip() if m else src.stem).replace("*", "")
     dst.parent.mkdir(parents=True, exist_ok=True)

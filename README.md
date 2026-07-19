@@ -14,6 +14,8 @@
 
 **📖 웹으로 읽기: [GitHub Pages](https://yazzang-homelab.github.io/gjc-multivendor-adaptation-guide/)** (GitHub Actions가 자동 빌드)
 
+**"내 벤더 구성은 또 다른데?"** → 바로 [4부: 내 구성으로 만들기](docs/04-build-your-own.md)로 가라.
+
 </div>
 
 ---
@@ -27,15 +29,16 @@ AI 코딩 에이전트는 한 세션 안에서도 여러 "역할"을 쓴다 — 
 이 리포는 **구성이 다른 환경에서 좌석을 치환해 살리는 법**과, 그 과정에서 실제로 밟은 지뢰들, 그리고
 세션 안에서 모드를 전환하는 **`/mlbo` 슬래시 커맨드**까지 정리한다.
 
-## 📚 목차 — 3부 구성
+## 📚 목차 — 4부 구성
 
 | 부 | 문서 | 누구에게 |
 |---|---|---|
 | **1부** | [GJC 개요 및 설치](docs/01-gjc-intro.md) | GJC가 처음인 사람 — 뭔지, 왜 쓰는지, 어떻게 까는지 |
 | **2부** | [멀티벤더 셋업 가이드 개요](docs/02-multivendor-overview.md) | 원본 [gjc-multivendor-setup-guide](https://github.com/project820/gjc-multivendor-setup-guide)의 핵심을 10분 요약 |
-| **3부** | [우리 환경 적응 가이드](docs/03-adaptation.md) | **이 리포의 본론** — 벤더 구성이 다를 때의 좌석 치환 + 엔진 함정 2건 + `/mlbo` 커맨드 + MLBO(베이지안 최적화) 관점 |
+| **3부** | [우리 환경 적응 가이드](docs/03-adaptation.md) | 좌석 치환 실전 기록 — 엔진 함정 2건 + `/mlbo` 커맨드 + MLBO(베이지안 최적화) 관점 |
+| **4부** | [내 구성으로 만들기](docs/04-build-your-own.md) | **당신의 벤더 조합용 범용 레시피** — 인벤토리 → 좌석 규칙 → 구성별 예시 → 검증 |
 
-부록: [치환 프로필 예제 YAML](profiles/adapted-profiles.example.yml) · [`/mlbo` 엔진 패치](patches/mlbo-slash-command/)
+부록: [치환 프로필 예제](profiles/adapted-profiles.example.yml) · [내 구성용 템플릿](profiles/template.yml) · [`/mlbo` 엔진 패치](patches/mlbo-slash-command/)
 
 ## ⚡ 3줄 요약
 

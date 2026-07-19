@@ -1,0 +1,37 @@
+# template.yml — 내 구성용 좌석표 템플릿.
+# <> placeholder 를 채워서 ~/.gjc/agent/models.yml 의 profiles: 블록에 병합하라.
+# 선택 규칙·예시는 docs/04-build-your-own.md 참조.
+#
+# 불변식:
+#   1) required_providers 최소 2벤더 (1벤더면 GJC 내장 프로필을 써라)
+#   2) critic 은 default 와 다른 벤더 (cross-family)
+#   3) default 는 가진 것 중 최상위 — 절대 타협 금지
+
+profiles:
+
+  daily-mine:                          # ★ 평소 기본
+    required_providers: [<vendor-1>, <vendor-2>]
+    model_mapping:
+      default:   <가진-것-중-최상위-플래그십>            # 예: anthropic/claude-opus-4-8:medium
+      executor:  <코딩축-최강>                          # 예: openai-codex/gpt-5.6-terra:high
+      planner:   <추론축-최강>                          # 예: openai-codex/gpt-5.6-sol:high
+      architect: <장문맥-최강>                          # 예: 1M ctx 모델
+      critic:    <default와-다른-벤더-아무거나>          # 독립성 > 성능
+
+  review-mine:                         # 🚨 리뷰어 모드 (선택) — architect/critic 주연
+    required_providers: [<vendor-1>, <vendor-2>]
+    model_mapping:
+      default:   <최상위-플래그십:high>
+      executor:  <재현·PoC용>
+      planner:   <체크리스트용-중간급>
+      architect: <최상위-플래그십:high>                 # 1차 판정자
+      critic:    <default와-다른-벤더:high>             # 머지 게이트
+
+  eco-mine:                            # 💸 저단가 (선택) — 대량 배치용
+    required_providers: [<vendor-1>, <vendor-2>]
+    model_mapping:
+      default:   <중간급:medium>
+      executor:  <최저가-코더>                          # 예: deepseek-v4-flash
+      planner:   <중간급:medium>
+      architect: <장문맥-저가>
+      critic:    <default와-다른-벤더-저가>

@@ -152,4 +152,6 @@ patches/mlbo-slash-command/apply-mlbo.sh
 
 ---
 
+**다음 → [4부: 내 구성으로 만들기](04-build-your-own.md)** — 당신의 벤더 조합용 범용 레시피
+
 **부록**: [프로필 예제 YAML](../profiles/adapted-profiles.example.yml) · [패치 소스](../patches/mlbo-slash-command/)
