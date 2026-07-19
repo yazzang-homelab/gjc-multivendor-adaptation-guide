@@ -1,0 +1,98 @@
+# GJC 멀티벤더 치환 프로필 예제 — ~/.gjc/agent/models.yml 에 병합해서 사용.
+# 전제:
+#   - anthropic / openai-codex : 구독 OAuth 로그인 (gjc 안에서 /login)
+#   - local-gateway            : 로컬 OpenAI-호환 게이트웨이 (예: Antigravity CLI 래퍼).
+#                                ⚠ auth: none 금지 — 더미 apiKey 필수 (README 함정 ①)
+#                                ⚠ SSE 종료 버그 확인 (README 함정 ②)
+#   - deepseek                 : direct API, 키는 env 이름으로만 참조 (값 커밋 금지)
+#
+# 원본 좌석표: https://github.com/project820/gjc-multivendor-setup-guide (CC BY 4.0)
+# 치환 규칙: google-antigravity → local-gateway · xai critic → deepseek(제4계열) · opencode-go → deepseek
+
+providers:
+  local-gateway:
+    baseUrl: http://127.0.0.1:8086/v1
+    apiKey: local-dummy          # 게이트웨이가 Authorization 헤더를 무시하는지 먼저 curl 로 확인
+    api: openai-completions
+    models:
+      - id: gemini-3-pro
+        name: Gemini 3 Pro (local gateway)
+        reasoning: true
+        input: [text]
+        contextWindow: 1000000
+        maxTokens: 32000
+        cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }
+      - id: gemini-3-flash
+        name: Gemini 3 Flash (local gateway)
+        reasoning: false
+        input: [text]
+        contextWindow: 1000000
+        maxTokens: 16000
+        cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }
+
+  deepseek:
+    baseUrl: https://api.deepseek.com
+    apiKeyEnv: DEEPSEEK_API_KEY  # 키 값이 아니라 env 이름 — 값을 파일에 쓰지 말 것
+    api: openai-completions
+    models:
+      - id: deepseek-v4-pro
+        name: DeepSeek V4 Pro (direct API)
+        reasoning: true
+        input: [text]
+        contextWindow: 1000000
+        maxTokens: 64000
+        cost: { input: 0.55, output: 2.2, cacheRead: 0.14, cacheWrite: 0 }
+      - id: deepseek-v4-flash
+        name: DeepSeek V4 Flash (direct API)
+        reasoning: false
+        input: [text]
+        contextWindow: 128000
+        maxTokens: 16000
+        cost: { input: 0.27, output: 1.1, cacheRead: 0.07, cacheWrite: 0 }
+
+profiles:
+
+  daily-adapted:                       # ★ 원본 daily 치환 — 평소 기본
+    required_providers: [anthropic, openai-codex, local-gateway]
+    model_mapping:
+      default:   anthropic/claude-opus-4-8:medium               # 본체 효율 knee · 1M ctx
+      executor:  openai-codex/gpt-5.6-terra:high                # 코딩특화 · 벤더 분산
+      planner:   openai-codex/gpt-5.6-sol:high                  # 장기 워크플로 분해
+      architect: local-gateway/gemini-3-pro                     # 1M ctx (게이트웨이 경유)
+      critic:    local-gateway/gemini-3-pro                     # 본체와 cross-family
+
+  coding-sprint-adapted:               # 원본 coding-sprint 치환 — 구현 처리량 특화
+    required_providers: [anthropic, openai-codex, local-gateway]
+    model_mapping:
+      default:   anthropic/claude-opus-4-8:medium
+      executor:  anthropic/claude-opus-4-8:high                 # Opus 승격 (구독 포함 코딩 최강)
+      planner:   openai-codex/gpt-5.6-sol:high
+      architect: local-gateway/gemini-3-pro
+      critic:    openai-codex/gpt-5.6-terra:high
+
+  cyber-cop-adapted:                   # 원본 cyber-cop 치환 — 리뷰어 모드 (PR 리뷰·보안 감사)
+    required_providers: [anthropic, openai-codex, local-gateway]
+    model_mapping:
+      default:   anthropic/claude-opus-4-8:high                 # 집계자 — critic 판정 원문 보존
+      executor:  openai-codex/gpt-5.6-sol:high                  # 재현 PoC·failing test
+      planner:   local-gateway/gemini-3-pro                     # 리뷰 체크리스트
+      architect: anthropic/claude-opus-4-8:high                 # 1차 판정 (CLEAR/WATCH/BLOCK)
+      critic:    openai-codex/gpt-5.6-sol:high                  # 머지 게이트 (cross-family)
+
+  llm-council-adapted:                 # 원본 llm-council 치환 — 4계열 유지 (xai → DeepSeek)
+    required_providers: [anthropic, openai-codex, local-gateway, deepseek]
+    model_mapping:
+      default:   anthropic/claude-opus-4-8:high                 # 집계자 제한
+      executor:  openai-codex/gpt-5.6-terra:high
+      planner:   openai-codex/gpt-5.6-sol:xhigh
+      architect: local-gateway/gemini-3-pro                     # 판정석 1 (Google 계열)
+      critic:    deepseek/deepseek-v4-pro                       # 판정석 2 (DeepSeek 계열)
+
+  eco-adapted:                         # 원본 eco 치환 — 저단가
+    required_providers: [openai-codex, deepseek, local-gateway]
+    model_mapping:
+      default:   openai-codex/gpt-5.6-terra:medium
+      executor:  deepseek/deepseek-v4-flash
+      planner:   openai-codex/gpt-5.6-luna:medium
+      architect: local-gateway/gemini-3-pro
+      critic:    local-gateway/gemini-3-flash
