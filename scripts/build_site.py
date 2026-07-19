@@ -79,6 +79,9 @@ def render(src: Path, dst: Path, base: str) -> None:
     text = src.read_text(encoding="utf-8")
     # 문서 간 .md 링크 → .html
     text = re.sub(r"\((?!https?://)([^)\s]+)\.md(#[^)\s]*)?\)", r"(\1.html\2)", text)
+    # GitHub 는 <div align> 블록 사이 마크다운을 렌더하지만 python-markdown 은 못 한다 —
+    # standalone div 열고닫는 줄을 제거해 내용물이 일반 마크다운으로 처리되게 한다.
+    text = re.sub(r"^</?div[^>]*>\s*$", "", text, flags=re.M)
     MD.reset()
     body = MD.convert(text)
     m = re.search(r"^#\s+(.+)$", text, re.M)
